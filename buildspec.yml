@@ -1,0 +1,21 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - $(aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin 250738637992.dkr.ecr.eu-west-1.amazonaws.com)
+  build:
+    commands:
+      - echo Building Docker image...
+      - docker build -t expensetracker .
+      - docker tag expensetracker:latest 250738637992.dkr.ecr.eu-west-1.amazonaws.com/expensetracker:latest
+  post_build:
+    commands:
+      - echo Pushing Docker image...
+      - docker push 250738637992.dkr.ecr.eu-west-1.amazonaws.com/expensetracker:latest
+      - echo Writing image definitions...
+      - printf '[{"name":"expensetracker","imageUri":"%s"}]' 250738637992.dkr.ecr.eu-west-1.amazonaws.com/expensetracker:latest > imagedefinitions.json
+
+artifacts:
+  files: imagedefinitions.json
